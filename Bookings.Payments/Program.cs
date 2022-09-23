@@ -3,6 +3,7 @@ using Bookings.Payments.Domain;
 using Bookings.Payments.Infrastructure;
 using Eventuous;
 using Eventuous.AspNetCore;
+using Eventuous.Postgresql;
 using Serilog;
 
 TypeMap.RegisterKnownEventTypes();
@@ -31,4 +32,15 @@ app.MapDiscoveredCommands<Payment>();
 
 app.UseSwaggerUI();
 
+if (app.Configuration.GetValue<bool>("Postgres:InitializeDatabase")) {
+    await InitialiseSchema(app);
+}
+
 app.Run();
+
+async Task InitialiseSchema(IHost webApplication) {
+    var options           = webApplication.Services.GetRequiredService<PostgresStoreOptions>();
+    var schema            = new Schema(options.Schema);
+    var connectionFactory = webApplication.Services.GetRequiredService<GetPostgresConnection>();
+    await schema.CreateSchema(connectionFactory);
+}

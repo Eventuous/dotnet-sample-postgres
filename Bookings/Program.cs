@@ -3,6 +3,7 @@ using Bookings.Domain.Bookings;
 using Eventuous;
 using Eventuous.AspNetCore;
 using Eventuous.Diagnostics.Logging;
+using Eventuous.Postgresql;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
 using Serilog;
@@ -34,6 +35,10 @@ builder.Services.AddEventuous(builder.Configuration);
 
 var app = builder.Build();
 
+if (app.Configuration.GetValue<bool>("Postgres:InitializeDatabase")) {
+    await InitialiseSchema(app);
+}
+
 app.UseSerilogRequestLogging();
 app.AddEventuousLogs();
 app.UseSwagger().UseSwaggerUI();
@@ -54,4 +59,11 @@ catch (Exception e) {
 finally {
     Log.CloseAndFlush();
     listener.Dispose();
+}
+
+async Task InitialiseSchema(IHost webApplication) {
+    var options           = webApplication.Services.GetRequiredService<PostgresStoreOptions>();
+    var schema            = new Schema(options.Schema);
+    var connectionFactory = webApplication.Services.GetRequiredService<GetPostgresConnection>();
+    await schema.CreateSchema(connectionFactory);
 }
