@@ -20,14 +20,6 @@ builder.Services.AddEventuous(builder.Configuration);
 
 var app = builder.Build();
 
-if (app.Configuration.GetValue<bool>("initializeDatabase"))
-{
-    var options = app.Services.GetRequiredService<PostgresStoreOptions>();
-    var schema = new Schema(options.Schema);
-    var connectionFactory = app.Services.GetRequiredService<GetPostgresConnection>();
-    await schema.CreateSchema(connectionFactory);
-}
-
 app.AddEventuousLogs();
 app.UseSwagger().UseSwaggerUI();
 app.UseOpenTelemetryPrometheusScrapingEndpoint();
