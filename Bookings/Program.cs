@@ -22,7 +22,6 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Seq("http://localhost:5341")
     .CreateLogger();
 
-
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
@@ -36,12 +35,8 @@ builder.Services.AddEventuous(builder.Configuration);
 
 var app = builder.Build();
 
-if (app.Configuration.GetValue<bool>("initializeDatabase"))
-{
-    var options = app.Services.GetRequiredService<PostgresStoreOptions>();
-    var schema = new Schema(options.Schema);
-    var connectionFactory = app.Services.GetRequiredService<GetPostgresConnection>();
-    await schema.CreateSchema(connectionFactory);
+if (app.Configuration.GetValue<bool>("Postgres:InitializeDatabase")) {
+    await InitialiseSchema(app);
 }
 
 app.UseSerilogRequestLogging();
@@ -50,7 +45,7 @@ app.UseSwagger().UseSwaggerUI();
 app.MapControllers();
 app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
-var factory = app.Services.GetRequiredService<ILoggerFactory>();
+var factory  = app.Services.GetRequiredService<ILoggerFactory>();
 var listener = new LoggingEventListener(factory, "OpenTelemetry");
 
 try {
@@ -64,4 +59,11 @@ catch (Exception e) {
 finally {
     Log.CloseAndFlush();
     listener.Dispose();
+}
+
+async Task InitialiseSchema(IHost webApplication) {
+    var options           = webApplication.Services.GetRequiredService<PostgresStoreOptions>();
+    var schema            = new Schema(options.Schema);
+    var connectionFactory = webApplication.Services.GetRequiredService<GetPostgresConnection>();
+    await schema.CreateSchema(connectionFactory);
 }
