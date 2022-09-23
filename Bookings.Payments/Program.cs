@@ -10,27 +10,33 @@ TypeMap.RegisterKnownEventTypes();
 Logging.ConfigureLog();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 // OpenTelemetry instrumentation must be added before adding Eventuous services
 builder.Services.AddOpenTelemetry();
-
-builder.Services.AddServices(builder.Configuration);
-builder.Host.UseSerilog();
+builder.Services.AddEventuous(builder.Configuration);
 
 var app = builder.Build();
-app.AddEventuousLogs();
 
-app.UseSwagger();
+if (app.Configuration.GetValue<bool>("initializeDatabase"))
+{
+    var options = app.Services.GetRequiredService<PostgresStoreOptions>();
+    var schema = new Schema(options.Schema);
+    var connectionFactory = app.Services.GetRequiredService<GetPostgresConnection>();
+    await schema.CreateSchema(connectionFactory);
+}
+
+app.AddEventuousLogs();
+app.UseSwagger().UseSwaggerUI();
 app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
 // Here we discover commands by their annotations
 // app.MapDiscoveredCommands();
 app.MapDiscoveredCommands<Payment>();
 
-app.UseSwaggerUI();
+
 
 if (app.Configuration.GetValue<bool>("Postgres:InitializeDatabase")) {
     await InitialiseSchema(app);
