@@ -40,6 +40,7 @@ public static class Registrations {
 
         services.AddSingleton(connectionFactory);
         services.AddSingleton((GetPostgresConnection)GetConnection);
+        services.AddSingleton(new PostgresStoreOptions());
         services.AddAggregateStore<PostgresStore>();
         services.AddApplicationService<BookingsCommandService, Booking>();
 

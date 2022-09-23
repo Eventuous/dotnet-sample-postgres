@@ -3,6 +3,7 @@ using Bookings.Domain.Bookings;
 using Eventuous;
 using Eventuous.AspNetCore;
 using Eventuous.Diagnostics.Logging;
+using Eventuous.Postgresql;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
 using Serilog;
@@ -21,6 +22,7 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Seq("http://localhost:5341")
     .CreateLogger();
 
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
@@ -34,13 +36,21 @@ builder.Services.AddEventuous(builder.Configuration);
 
 var app = builder.Build();
 
+if (app.Configuration.GetValue<bool>("initializeDatabase"))
+{
+    var options = app.Services.GetRequiredService<PostgresStoreOptions>();
+    var schema = new Schema(options.Schema);
+    var connectionFactory = app.Services.GetRequiredService<GetPostgresConnection>();
+    await schema.CreateSchema(connectionFactory);
+}
+
 app.UseSerilogRequestLogging();
 app.AddEventuousLogs();
 app.UseSwagger().UseSwaggerUI();
 app.MapControllers();
 app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
-var factory  = app.Services.GetRequiredService<ILoggerFactory>();
+var factory = app.Services.GetRequiredService<ILoggerFactory>();
 var listener = new LoggingEventListener(factory, "OpenTelemetry");
 
 try {
