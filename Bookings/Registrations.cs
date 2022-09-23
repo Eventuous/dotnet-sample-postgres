@@ -84,12 +84,12 @@ public static class Registrations {
         services.AddOpenTelemetryTracing(
             builder => {
                 builder
-                    .AddAspNetCoreInstrumentation()
-                    .AddGrpcClientInstrumentation()
-                    .AddEventuousTracing()
-                    .AddMongoDBInstrumentation()
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("bookings"))
-                    .SetSampler(new AlwaysOnSampler());
+                    .SetSampler(new AlwaysOnSampler())
+                    .AddAspNetCoreInstrumentation()
+                    .AddNpgsql()
+                    .AddEventuousTracing()
+                    .AddMongoDBInstrumentation();
 
                 if (otelEnabled)
                     builder.AddOtlpExporter();

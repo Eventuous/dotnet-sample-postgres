@@ -53,7 +53,7 @@ public static class Registrations {
         services.AddOpenTelemetryTracing(
             builder => builder
                 .AddAspNetCoreInstrumentation()
-                .AddGrpcClientInstrumentation()
+                .AddNpgsql()
                 .AddEventuousTracing()
                 .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("payments"))
                 .SetSampler(new AlwaysOnSampler())
