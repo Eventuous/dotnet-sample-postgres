@@ -54,7 +54,6 @@ public static class Registrations {
         services.AddSubscription<PostgresAllStreamSubscription, PostgresAllStreamSubscriptionOptions>(
             "BookingsProjections",
             builder => builder
-                .Configure(cfg => cfg.ConcurrencyLimit = 2)
                 .AddEventHandler<BookingStateProjection>()
                 .AddEventHandler<MyBookingsProjection>()
                 .WithPartitioningByStream(2)
