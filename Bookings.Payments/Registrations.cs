@@ -17,7 +17,7 @@ using RabbitMQ.Client;
 namespace Bookings.Payments;
 
 public static class Registrations {
-    public static void AddServices(this IServiceCollection services, IConfiguration configuration) {
+    public static void AddEventuous(this IServiceCollection services, IConfiguration configuration) {
         NpgsqlConnection GetConnection() => new(configuration["Postgres:ConnectionString"]);
 
         var connectionFactory = new ConnectionFactory {
@@ -27,6 +27,7 @@ public static class Registrations {
 
         services.AddSingleton(connectionFactory);
         services.AddSingleton((GetPostgresConnection)GetConnection);
+        services.AddSingleton(new PostgresStoreOptions());
         services.AddAggregateStore<PostgresStore>();
         services.AddApplicationService<CommandService, Payment>();
         services.AddSingleton(Mongo.ConfigureMongo(configuration));
