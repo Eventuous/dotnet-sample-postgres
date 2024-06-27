@@ -1,3 +1,7 @@
+# Deprecation notice
+
+Samples are moved to the [core repository](https://github.com/Eventuous/eventuous/tree/dev/samples).
+
 # Bookings sample application - Postgres
 
 This projects shows some of the features of Eventuous:
